@@ -4,7 +4,7 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
 
 # Installation
 
-- Download the latest [release](/nekno/DV7toDV8/releases)
+- Download the latest [release](https://github.com/nekno/DV7toDV8/releases)
 - Extract the `.zip` file
 - Drag & drop the `DV7 to DV8` app to your `Applications` folder
 - The app has not been digitally signed by an Apple Developer ID, so you will need to approve the app for the first run
@@ -14,7 +14,7 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
     - Two-finger tap on the app icon with your trackpad and select **Open**
   - Approve the security prompt to allow the app to run
 
-# Usage
+# App Usage
 
 - When you launch the app, you'll be prompted to select a folder
 - Select a folder that contains Dolby Vision profile 7 `.mkv` files you want to convert to Dolby Vision profile 8.1
@@ -33,6 +33,28 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
   - Remux the DV8 BL+RPU HEVC stream into a new MKV file, muxing English audio and subtitle tracks from the original MKV file
   - Delete the DV8 BL+RPU HEVC and RPU working files
 
+# Script Usage
+
+If you prefer to use a plaintext Bash script over an app, you can also run `DV7toDV8.sh` directly.
+
+The upside is that you can see and read exactly what you're running; the downside is that macOS doesn't want you to run downloaded tools, so you'll have to approve each utility in the System Settings app.
+
+- Download and extract the repo
+- Run `DV7toDV8.sh` in Terminal, passing one argument for the folder location of the MKV files you want to convert
+- On first run of each utility, you'll need to approve the app to run and then re-run the script
+- The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (the latter can be installed via Homebrew); you'll just need to update the paths to the tools appropriately in the script
+- To approve the tools to run, you can run each tool in the `tools` folder in Terminal, or just run the script repeatedly (passing a folder containing MKV files as an argument)
+  - Run the script once
+  - Open the **System Settings** app
+  - In the sidebar, select **Privacy & Security**
+  - Scroll down to the **Security** section
+  - Approve the `mkvextract` utility to run
+  - Run the script a second time
+  - Approve the `dovi_tool` utility to run
+  - Run the script a third time
+  - Approve the `mkvmerge` utility to run
+- All utilities should now be approved and the script can be run normally
+
 # Building
 
 This project leverages Platypus to create a macOS app bundle from a simple Bash script.
@@ -40,7 +62,7 @@ This project leverages Platypus to create a macOS app bundle from a simple Bash 
 - Clone the **DV7toDV8** repo in the `~/Documents/Xcode/DV7toDV8` folder
 - Install Platypus 5.4.1 or greater
 - In macOS Ventura 13 (substitute similar steps for macOS <13):
-  - Open the **Settings** app
+  - Open the **System Settings** app
   - In the sidebar, select **Privacy & Security**
   - In the main window, select **Full Disk Access**
   - Click the **+** sign in the lower left
