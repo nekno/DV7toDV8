@@ -47,7 +47,7 @@ jsonFilePath=$configPath/DV7toDV8.json
 
 for mkvFile in "$targetDir"/*.mkv
 do
-    mkvBase=`basename "$mkvFile" .mkv`
+    mkvBase=$(basename "$mkvFile" .mkv)
 
 	echo "Demuxing DV7 BL+EL+RPU HEVC from MKV..."
     "$mkvextractPath" "$mkvFile" tracks 0:"$mkvBase.DV7.BL_EL_RPU.hevc"
