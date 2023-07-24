@@ -33,7 +33,7 @@ echo "Processing directory: '$targetDir'"
 # Get the script's directory path; do this before pushing the targetDir
 scriptDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
-pushd "$targetDir"
+pushd "$targetDir" > /dev/null
 
 # Get the subdirectory paths
 toolsPath=$scriptDir/tools
@@ -75,5 +75,5 @@ do
     rm "$mkvBase.DV8.BL_RPU.hevc"
 done
 
-popd
+popd > /dev/null
 echo "Done."
