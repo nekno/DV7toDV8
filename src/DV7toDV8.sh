@@ -31,7 +31,7 @@ fi
 echo "Processing directory: '$targetDir'"
 
 # Get the script's directory path; do this before pushing the targetDir
-scriptDir=`dirname "$(readlink -f "$0")"`
+scriptDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 pushd "$targetDir"
 
