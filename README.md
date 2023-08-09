@@ -7,6 +7,10 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
 - Download the latest [release](https://github.com/nekno/DV7toDV8/releases)
 - Extract the `.zip` file
 - Drag & drop the `DV7 to DV8` app to your `Applications` folder
+- The included `mkvtoolnix` utilities aren't available in Universal binaries, so that means if you're using an Apple silicon Mac, you'll need to install [Rosetta 2](https://en.wikipedia.org/wiki/Rosetta_(software)#Rosetta_2) directly from Apple:
+  - Launch the **Terminal** app
+  - Type `softwareupdate --install-rosetta` and hit `return`
+  - Accept the license agreement
 - The app has not been digitally signed by an Apple Developer ID, so you will need to approve the app for the first run
   - Do one of the following:
     - Right-click on the app icon with your mouse and select **Open**
@@ -30,7 +34,7 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
   - Delete the DV7 BL+EL+RPU HEVC file to conserve disk space
   - Extract the DV8 RPU from the DV8 BL+RPU HEVC stream
   - Plot a graph of the L1 metadata and render it into a PNG
-  - Remux the DV8 BL+RPU HEVC stream into a new MKV file, muxing English audio and subtitle tracks from the original MKV file
+  - Remux the DV8 BL+RPU HEVC stream into a new MKV file with the non-video tracks from the original MKV file
   - Delete the DV8 BL+RPU HEVC and RPU working files
 
 # Script Usage
