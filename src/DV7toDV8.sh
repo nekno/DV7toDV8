@@ -86,7 +86,9 @@ do
     "$doviToolPath" plot "$mkvBase.DV8.RPU.bin" -o "$mkvBase.DV8.L1_plot.png"
 	
 	echo "Remuxing DV8 MKV..."
-    "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a en -s en "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+    # Add "-a" and "-s" options after the "-D" option to filter audio and subtitle tracks, respectively, e.g., 
+    # use the following options to include only English (en) tracks: -a en -s en
+    "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
 	
 	echo "Cleaning up..."
     rm "$mkvBase.DV8.RPU.bin"
