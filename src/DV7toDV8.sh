@@ -40,10 +40,13 @@ toolsPath=$scriptDir/tools
 configPath=$scriptDir/config
 
 # Reference the dovi_tool, mkvextract, and mkvmerge executables and the JSON file in their respective subdirectories
+languageCodesPath=$toolsPath/language_codes.applescript
 doviToolPath=$toolsPath/dovi_tool
 mkvextractPath=$toolsPath/mkvextract
 mkvmergePath=$toolsPath/mkvmerge
 jsonFilePath=$configPath/DV7toDV8.json
+
+languageCodes=$(osascript "$languageCodesPath")
 
 for mkvFile in "$targetDir"/*.mkv
 do
@@ -86,9 +89,13 @@ do
     "$doviToolPath" plot "$mkvBase.DV8.RPU.bin" -o "$mkvBase.DV8.L1_plot.png"
 	
 	echo "Remuxing DV8 MKV..."
-    # Add "-a" and "-s" options after the "-D" option to filter audio and subtitle tracks, respectively, e.g., 
-    # use the following options to include only English (en) tracks: -a en -s en
-    "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+    if [[ $languageCodes != "" ]]
+    then
+        echo "Remuxing audio and subtitle languages: $languageCodes"
+        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+    else
+        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+    fi
 	
 	echo "Cleaning up..."
     rm "$mkvBase.DV8.RPU.bin"
