@@ -46,7 +46,7 @@ The upside is that you can see and read exactly what you're running; the downsid
 - Download and extract the repo
 - Run `DV7toDV8.sh` in Terminal, passing one argument for the folder location of the MKV files you want to convert
 - On first run of each utility, you'll need to approve the app to run and then re-run the script
-- The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (the latter can be installed via Homebrew); you'll just need to update the paths to the tools appropriately in the script
+- The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (both can be installed via Homebrew); you'll just need to update the paths to the tools appropriately in the script
 - To approve the tools to run, you can run each tool in the `tools` folder in Terminal, or just run the script repeatedly (passing a folder containing MKV files as an argument)
   - Run the script once
   - Open the **System Settings** app
