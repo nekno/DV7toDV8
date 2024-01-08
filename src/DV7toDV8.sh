@@ -45,6 +45,7 @@ doviToolPath=$toolsPath/dovi_tool
 mkvextractPath=$toolsPath/mkvextract
 mkvmergePath=$toolsPath/mkvmerge
 jsonFilePath=$configPath/DV7toDV8.json
+mediainfoPath=$toolsPath/mediainfo
 
 languageCodes=$(osascript "$languageCodesPath")
 
@@ -89,12 +90,51 @@ do
     "$doviToolPath" plot "$mkvBase.DV8.RPU.bin" -o "$mkvBase.DV8.L1_plot.png"
 	
 	echo "Remuxing DV8 MKV..."
+    framerate=$("$mediainfoPath" --Output="Video;%FrameRate%" "$mkvFile")
+    echo "Found Framerate: $framerate"
+
+    if [ "$framerate" = "23.976" ]
+    then 
+        echo "Setting 23.976 framerate"
+        duration="--default-duration 0:24000/1001p --fix-bitstream-timing-information 0:1"
+    fi
+    if [ "$framerate" = "24.000" ]
+    then 
+        echo "Setting 24.000 framerate"
+        duration="--default-duration 0:24p --fix-bitstream-timing-information 0:1"
+    fi
+    if [ "$framerate" = "25.000" ]
+    then 
+        echo "Setting 25.000 framerate"
+        duration="--default-duration 0:25p --fix-bitstream-timing-information 0:1"
+    fi
+    if [ "$framerate" = "30.000" ]
+    then 
+        echo "Setting 30.000 framerate"
+        duration="--default-duration 0:30p --fix-bitstream-timing-information 0:1"
+    fi
+    if [ "$framerate" = "48.000" ]
+    then 
+        echo "Setting 48.000 framerate"
+        duration="--default-duration 0:48p --fix-bitstream-timing-information 0:1"
+    fi
+    if [ "$framerate" = "50.000" ]
+    then 
+        echo "Setting 50.000 framerate"
+        duration="--default-duration 0:50p --fix-bitstream-timing-information 0:1"
+    fi
+    if [ "$framerate" = "60.000" ]
+    then 
+        echo "Setting 60.000 framerate"
+        duration="--default-duration 0:60p --fix-bitstream-timing-information 0:1"
+    fi
+
     if [[ $languageCodes != "" ]]
     then
         echo "Remuxing audio and subtitle languages: $languageCodes"
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+        "$mkvmergePath" --output "$mkvBase.DV8.mkv" --no-video -a $languageCodes -s $languageCodes "$mkvFile" --compression 0:none $duration "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
     else
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+        "$mkvmergePath" --output "$mkvBase.DV8.mkv" --no-video "$mkvFile" --language 0:und --compression 0:none $duration "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
     fi
 	
 	echo "Cleaning up..."
