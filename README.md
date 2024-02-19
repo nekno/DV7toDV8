@@ -61,11 +61,14 @@ The upside is that you can see and read exactly what you're running; the downsid
 
 # Building
 
-This project leverages Platypus to create a macOS app bundle from a simple Bash script.
+This project leverages [Platypus](https://sveinbjorn.org/platypus) to create a macOS app bundle from a simple Bash script.
 
 - Clone the **DV7toDV8** repo in the `~/Documents/Xcode/DV7toDV8` folder
-- Install Platypus 5.4.1 or greater
-- In macOS Ventura 13 (substitute similar steps for macOS <13):
+- Install Platypus 5.4.1 or greater via [download](https://sveinbjorn.org/files/software/platypus.zip) or Homebrew
+  ```bash
+  $ brew install --cask platypus 
+  ```
+- In macOS Ventura 13 or greater (substitute similar steps for macOS <13):
   - Open the **System Settings** app
   - In the sidebar, select **Privacy & Security**
   - In the main window, select **Full Disk Access**
