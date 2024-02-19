@@ -52,7 +52,7 @@ for mkvFile in "$targetDir"/*.mkv
 do
     mkvBase=$(basename "$mkvFile" .mkv)
 
-	echo "Demuxing DV7 BL+EL+RPU HEVC from MKV..."
+    echo "Demuxing DV7 BL+EL+RPU HEVC from MKV..."
     "$mkvextractPath" "$mkvFile" tracks 0:"$mkvBase.DV7.BL_EL_RPU.hevc"
 
     if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV7.BL_EL_RPU.hevc" ]]
@@ -60,17 +60,17 @@ do
         echo "Failed to extract HEVC track from MKV. Quitting."
         exit 1
     fi
-	
-	echo "Demuxing DV7 EL+RPU HEVC..."
-	"$doviToolPath" demux --el-only "$mkvBase.DV7.BL_EL_RPU.hevc" -e "$mkvBase.DV7.EL_RPU.hevc"
+
+    echo "Demuxing DV7 EL+RPU HEVC..."
+    "$doviToolPath" demux --el-only "$mkvBase.DV7.BL_EL_RPU.hevc" -e "$mkvBase.DV7.EL_RPU.hevc"
 
     if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV7.EL_RPU.hevc" ]]
     then
         echo "Failed to demux EL+RPU HEVC file. Quitting."
         exit 1
     fi
-	
-	echo "Converting DV7 BL+EL+RPU to DV8 BL+RPU..."
+
+    echo "Converting DV7 BL+EL+RPU to DV8 BL+RPU..."
     "$doviToolPath" --edit-config "$jsonFilePath" convert --discard "$mkvBase.DV7.BL_EL_RPU.hevc" -o "$mkvBase.DV8.BL_RPU.hevc"
 
     if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV8.BL_RPU.hevc" ]]
@@ -78,17 +78,17 @@ do
         echo "File to convert BL+RPU. Quitting."
         exit 1
     fi
-	
-	echo "Deleting DV7 BL+EL+RPU HEVC..."
-	rm "$mkvBase.DV7.BL_EL_RPU.hevc"
-	
-	echo "Extracting DV8 RPU..."
+
+    echo "Deleting DV7 BL+EL+RPU HEVC..."
+    rm "$mkvBase.DV7.BL_EL_RPU.hevc"
+
+    echo "Extracting DV8 RPU..."
     "$doviToolPath" extract-rpu "$mkvBase.DV8.BL_RPU.hevc" -o "$mkvBase.DV8.RPU.bin"
-	
-	echo "Plotting L1..."
+
+    echo "Plotting L1..."
     "$doviToolPath" plot "$mkvBase.DV8.RPU.bin" -o "$mkvBase.DV8.L1_plot.png"
-	
-	echo "Remuxing DV8 MKV..."
+
+    echo "Remuxing DV8 MKV..."
     if [[ $languageCodes != "" ]]
     then
         echo "Remuxing audio and subtitle languages: $languageCodes"
@@ -96,9 +96,9 @@ do
     else
         "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
     fi
-	
-	echo "Cleaning up..."
-    rm "$mkvBase.DV8.RPU.bin"
+
+    echo "Cleaning up..."
+    rm "$mkvBase.DV8.RPU.bin" 
     rm "$mkvBase.DV8.BL_RPU.hevc"
 done
 
