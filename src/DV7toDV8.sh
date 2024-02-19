@@ -98,7 +98,8 @@ do
     fi
 
     echo "Cleaning up..."
-    rm "$mkvBase.DV8.RPU.bin" 
+    # One may want to save the original RPU bin for re-injection later (assuming it contains CMv4.0 metadata)
+    # rm "$mkvBase.DV8.RPU.bin" 
     rm "$mkvBase.DV8.BL_RPU.hevc"
 done
 
