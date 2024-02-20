@@ -14,13 +14,23 @@
 #     exit 1
 # fi
 
-targetDir=$1
+# Keep working files generated during processing
+keepFiles=false
 
-if [[ $# == 0 ]]
-then
-    echo "Please provide a directory: "
-    read targetDir
-fi
+while true
+do
+    case "$1" in
+    --keep-files)
+        echo "Option enabled to keep working files"
+        keepFiles=true
+        shift;;
+    "")
+        break;;
+    *)
+        targetDir=$1
+        shift;;
+    esac
+done
 
 if [[ ! -d $targetDir ]]
 then
@@ -52,17 +62,17 @@ for mkvFile in "$targetDir"/*.mkv
 do
     mkvBase=$(basename "$mkvFile" .mkv)
 
-    echo "Demuxing DV7 BL+EL+RPU HEVC from MKV..."
-    "$mkvextractPath" "$mkvFile" tracks 0:"$mkvBase.DV7.BL_EL_RPU.hevc"
+    echo "Demuxing BL+EL+RPU HEVC from MKV..."
+    "$mkvextractPath" "$mkvFile" tracks 0:"$mkvBase.BL_EL_RPU.hevc"
 
-    if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV7.BL_EL_RPU.hevc" ]]
+    if [[ $? != 0 ]] || [[ ! -f "$mkvBase.BL_EL_RPU.hevc" ]]
     then
         echo "Failed to extract HEVC track from MKV. Quitting."
         exit 1
     fi
 
     echo "Demuxing DV7 EL+RPU HEVC..."
-    "$doviToolPath" demux --el-only "$mkvBase.DV7.BL_EL_RPU.hevc" -e "$mkvBase.DV7.EL_RPU.hevc"
+    "$doviToolPath" demux --el-only "$mkvBase.BL_EL_RPU.hevc" -e "$mkvBase.DV7.EL_RPU.hevc"
 
     if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV7.EL_RPU.hevc" ]]
     then
@@ -70,8 +80,8 @@ do
         exit 1
     fi
 
-    echo "Converting DV7 BL+EL+RPU to DV8 BL+RPU..."
-    "$doviToolPath" --edit-config "$jsonFilePath" convert --discard "$mkvBase.DV7.BL_EL_RPU.hevc" -o "$mkvBase.DV8.BL_RPU.hevc"
+    echo "Converting BL+EL+RPU to DV8 BL+RPU..."
+    "$doviToolPath" --edit-config "$jsonFilePath" convert --discard "$mkvBase.BL_EL_RPU.hevc" -o "$mkvBase.DV8.BL_RPU.hevc"
 
     if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV8.BL_RPU.hevc" ]]
     then
@@ -79,8 +89,11 @@ do
         exit 1
     fi
 
-    echo "Deleting DV7 BL+EL+RPU HEVC..."
-    rm "$mkvBase.DV7.BL_EL_RPU.hevc"
+    echo "Deleting BL+EL+RPU HEVC..."
+    if [[ $keepFiles == false ]]
+    then
+        rm "$mkvBase.BL_EL_RPU.hevc"
+    fi
 
     echo "Extracting DV8 RPU..."
     "$doviToolPath" extract-rpu "$mkvBase.DV8.BL_RPU.hevc" -o "$mkvBase.DV8.RPU.bin"
@@ -97,10 +110,12 @@ do
         "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
     fi
 
-    echo "Cleaning up..."
-    # One may want to save the original RPU bin for re-injection later (assuming it contains CMv4.0 metadata)
-    # rm "$mkvBase.DV8.RPU.bin" 
-    rm "$mkvBase.DV8.BL_RPU.hevc"
+    if [[ $keepFiles == false ]]
+    then
+        echo "Cleaning up..."
+        rm "$mkvBase.DV8.RPU.bin" 
+        rm "$mkvBase.DV8.BL_RPU.hevc"
+    fi
 done
 
 popd > /dev/null
