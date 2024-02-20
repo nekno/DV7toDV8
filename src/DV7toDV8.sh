@@ -84,6 +84,15 @@ do
         exit 1
     fi
 
+    # If the EL is less than ~10MB, then the input was likely DV8 rather than DV7
+    # Extract and plot the RPU for archiving purposes, as it may be CMv4.0
+    if [[ $(wc -c < "$DV7_EL_RPU_HEVC") -lt 10000000 ]]
+    then
+        echo "Extracting original RPU for you to archive for future use..."
+        "$doviToolPath" extract-rpu "$BL_EL_RPU_HEVC" -o "$mkvBase.RPU.bin"
+        "$doviToolPath" plot "$mkvBase.RPU.bin" -o "$mkvBase.L1_plot.png"
+    fi
+
     echo "Converting BL+EL+RPU to DV8 BL+RPU..."
     "$doviToolPath" --edit-config "$jsonFilePath" convert --discard "$BL_EL_RPU_HEVC" -o "$DV8_BL_RPU_HEVC"
 
