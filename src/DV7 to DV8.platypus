@@ -12,8 +12,8 @@
 	<string>nekno</string>
 	<key>BundledFiles</key>
 	<array>
-		<string>~/Documents/Xcode/DV7toDV8/src/tools</string>
-		<string>~/Documents/Xcode/DV7toDV8/src/config</string>
+		<string>tools</string>
+		<string>config</string>
 	</array>
 	<key>Creator</key>
 	<string>Platypus-5.4.1</string>
@@ -56,7 +56,7 @@
 	<key>ScriptArgs</key>
 	<array/>
 	<key>ScriptPath</key>
-	<string>~/Documents/Xcode/DV7toDV8/src/DV7toDV8.sh</string>
+	<string>DV7toDV8.sh</string>
 	<key>SendNotifications</key>
 	<false/>
 	<key>StatusItemDisplayType</key>
@@ -256,6 +256,6 @@
 		<string>public.folder</string>
 	</array>
 	<key>Version</key>
-	<string>0.4</string>
+	<string>0.5</string>
 </dict>
 </plist>
