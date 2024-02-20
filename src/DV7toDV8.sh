@@ -61,29 +61,33 @@ languageCodes=$(osascript "$languageCodesPath")
 for mkvFile in "$targetDir"/*.mkv
 do
     mkvBase=$(basename "$mkvFile" .mkv)
+    BL_EL_RPU_HEVC=$mkvBase.BL_EL_RPU.hevc
+    DV7_EL_RPU_HEVC=$mkvBase.DV7.EL_RPU.hevc
+    DV8_BL_RPU_HEVC=$mkvBase.DV8.BL_RPU.hevc
+    DV8_RPU_BIN=$mkvBase.DV8.RPU.bin
 
     echo "Demuxing BL+EL+RPU HEVC from MKV..."
-    "$mkvextractPath" "$mkvFile" tracks 0:"$mkvBase.BL_EL_RPU.hevc"
+    "$mkvextractPath" "$mkvFile" tracks 0:"$BL_EL_RPU_HEVC"
 
-    if [[ $? != 0 ]] || [[ ! -f "$mkvBase.BL_EL_RPU.hevc" ]]
+    if [[ $? != 0 ]] || [[ ! -f "$BL_EL_RPU_HEVC" ]]
     then
         echo "Failed to extract HEVC track from MKV. Quitting."
         exit 1
     fi
 
-    echo "Demuxing DV7 EL+RPU HEVC..."
-    "$doviToolPath" demux --el-only "$mkvBase.BL_EL_RPU.hevc" -e "$mkvBase.DV7.EL_RPU.hevc"
+    echo "Demuxing DV7 EL+RPU HEVC for you to archive for future use..."
+    "$doviToolPath" demux --el-only "$BL_EL_RPU_HEVC" -e "$DV7_EL_RPU_HEVC"
 
-    if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV7.EL_RPU.hevc" ]]
+    if [[ $? != 0 ]] || [[ ! -f "$DV7_EL_RPU_HEVC" ]]
     then
         echo "Failed to demux EL+RPU HEVC file. Quitting."
         exit 1
     fi
 
     echo "Converting BL+EL+RPU to DV8 BL+RPU..."
-    "$doviToolPath" --edit-config "$jsonFilePath" convert --discard "$mkvBase.BL_EL_RPU.hevc" -o "$mkvBase.DV8.BL_RPU.hevc"
+    "$doviToolPath" --edit-config "$jsonFilePath" convert --discard "$BL_EL_RPU_HEVC" -o "$DV8_BL_RPU_HEVC"
 
-    if [[ $? != 0 ]] || [[ ! -f "$mkvBase.DV8.BL_RPU.hevc" ]]
+    if [[ $? != 0 ]] || [[ ! -f "$DV8_BL_RPU_HEVC" ]]
     then
         echo "File to convert BL+RPU. Quitting."
         exit 1
@@ -92,29 +96,29 @@ do
     echo "Deleting BL+EL+RPU HEVC..."
     if [[ $keepFiles == false ]]
     then
-        rm "$mkvBase.BL_EL_RPU.hevc"
+        rm "$BL_EL_RPU_HEVC"
     fi
 
     echo "Extracting DV8 RPU..."
-    "$doviToolPath" extract-rpu "$mkvBase.DV8.BL_RPU.hevc" -o "$mkvBase.DV8.RPU.bin"
+    "$doviToolPath" extract-rpu "$DV8_BL_RPU_HEVC" -o "$DV8_RPU_BIN"
 
     echo "Plotting L1..."
-    "$doviToolPath" plot "$mkvBase.DV8.RPU.bin" -o "$mkvBase.DV8.L1_plot.png"
+    "$doviToolPath" plot "$DV8_RPU_BIN" -o "$mkvBase.DV8.L1_plot.png"
 
     echo "Remuxing DV8 MKV..."
     if [[ $languageCodes != "" ]]
     then
         echo "Remuxing audio and subtitle languages: $languageCodes"
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
     else
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$mkvBase.DV8.BL_RPU.hevc" --track-order 1:0
+        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
     fi
 
     if [[ $keepFiles == false ]]
     then
         echo "Cleaning up..."
-        rm "$mkvBase.DV8.RPU.bin" 
-        rm "$mkvBase.DV8.BL_RPU.hevc"
+        rm "$DV8_RPU_BIN" 
+        rm "$DV8_BL_RPU_HEVC"
     fi
 done
 
