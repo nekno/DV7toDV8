@@ -1,5 +1,5 @@
 {
   "mode": 2,
-  "remove_cmv4": true,
+  "remove_cmv4": false,
   "remove_mapping": true
 }
