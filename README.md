@@ -39,14 +39,49 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
 
 # Script Usage
 
-If you prefer to use a plaintext Bash script over an app, you can also run `DV7toDV8.sh` directly.
+The `DV7toDV8.sh` script offers a more transparent but less streamlined approach compared to the app. It provides additional options for customization:
 
-The upside is that you can see and read exactly what you're running; the downside is that macOS doesn't want you to run downloaded tools, so you'll have to approve each utility in the System Settings app.
+```bash
+./DV7toDV8.sh [options]
+```
 
+## Options
+
+### -k or --keep-files
+
+Keeps intermediate files generated during the conversion process.
+
+### -t or --target
+
+Specifies the target directory where .mkv files are located. Defaults to the current directory if not specified.
+
+### -l
+
+Specifies comma-separated language codes for audio and subtitle tracks to include in the final .mkv file. If not specified, all tracks are included.
+
+### -u or --use-local
+
+Uses local system binaries of `mkvtoolnix` and `dovi_tool` if available, instead of the versions bundled with the script.
+
+### -h or --help
+
+Displays the help message detailing all options.
+
+## Example
+  
+```bash
+./DV7toDV8.sh -k -t /path/to/mkv/files -l eng,spa
+```
+
+### MacOS
 - Download and extract the repo
 - Run `DV7toDV8.sh` in Terminal, passing one argument for the folder location of the MKV files you want to convert
 - On first run of each utility, you'll need to approve the app to run and then re-run the script
-- The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (both can be installed via Homebrew); you'll just need to update the paths to the tools appropriately in the script
+- The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (both can be installed via Homebrew)
+  - If you choose to use your own copies of the utilities, you can pass the `-u` or `--use-local` flag to the script to use the local versions
+  - If you install the tools using Homebrew, they will be added to your PATH and the script will automatically use them
+  - If you install the tools manually, you will need to add the directory containing the tools to your PATH
+  - Finally, you can alternatively update DV7toDV8.sh to point to the location of the tools on your system
 - To approve the tools to run, you can run each tool in the `tools` folder in Terminal, or just run the script repeatedly (passing a folder containing MKV files as an argument)
   - Run the script once
   - Open the **System Settings** app
@@ -58,6 +93,12 @@ The upside is that you can see and read exactly what you're running; the downsid
   - Run the script a third time
   - Approve the `mkvmerge` utility to run
 - All utilities should now be approved and the script can be run normally
+
+## Linux
+- The steps for running the script on Linux are similar to those for macOS with a few exceptions
+  - The script will not prompt you to enter language codes. These can be specified using the `-l` flag or ommitted to include all tracks
+  - The script will not prompt you to approve the tools to run. As long as the tools are executable, they should run without issue
+
 
 # Building
 
