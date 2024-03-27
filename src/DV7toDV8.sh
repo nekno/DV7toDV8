@@ -91,7 +91,7 @@ languageCodesPath=$toolsPath/language_codes.applescript
 # If the --use-local flag is set, use the executables on the user's system; otherwise, use the executables in the tools directory
 if [[ $useLocal == true ]]
 then
-    doviToolPath=dov_tool
+    doviToolPath=dovi_tool
     mkvextractPath=mkvextract
     mkvmergePath=mkvmerge
 else
