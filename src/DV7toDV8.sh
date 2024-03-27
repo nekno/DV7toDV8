@@ -32,7 +32,7 @@ function print_help {
     echo "Options:"
     echo "-k|--keep-files       Keep working files"
     echo "-t|--target PATH      Specify the target directory (default: current directory)"
-    echo "-l LANG               Specify the language codes (comma-separated) for audio and subtitle tracks. If not specified, default to all tracks."
+    echo "-l|languages LANG     Specify the language codes (comma-separated) for audio and subtitle tracks. If not specified, default to all tracks."
     echo "-u|--use-local        Use local system binaries if available"
     echo "-h|--help             Display this help message"
     echo ""
@@ -51,7 +51,7 @@ while (( "$#" )); do
     targetDir=$2
     echo "Target directory set to '$targetDir'"
     shift 2;;
-  -l)
+  -l|--languages)
     languageCodes=$2
     echo "Language codes set to '$languageCodes'"
     languageCodeSet=true
