@@ -16,20 +16,57 @@
 
 # Keep working files generated during processing
 keepFiles=false
+targetDir=$PWD # Default to current directory
+languageCodes=""
+languageCodeSet=false
+doviToolPath=""
+mkvextractPath=""
+mkvmergePath=""
+useLocal=false
 
-while true
-do
-    case "$1" in
-    --keep-files)
-        echo "Option enabled to keep working files"
-        keepFiles=true
-        shift;;
-    "")
-        break;;
-    *)
-        targetDir=$1
-        shift;;
-    esac
+
+# Help function
+function print_help {
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "-k|--keep-files       Keep working files"
+    echo "-t|--target PATH      Specify the target directory (default: current directory)"
+    echo "-l LANG               Specify the language codes (comma-separated) for audio and subtitle tracks. If not specified, default to all tracks."
+    echo "-u|--use-local        Use local system binaries if available"
+    echo "-h|--help             Display this help message"
+    echo ""
+    exit 1
+}
+
+while (( "$#" )); do
+  case "$1" in
+  -k|--keep-files)
+    echo "Option enabled to keep working files"
+    keepFiles=true
+    shift;;
+  -h|--help)
+    print_help;;
+  -t|--target)
+    targetDir=$2
+    echo "Target directory set to '$targetDir'"
+    shift 2;;
+  -l)
+    languageCodes=$2
+    echo "Language codes set to '$languageCodes'"
+    languageCodeSet=true
+    shift 2;;
+  -u|--use-local)
+    useLocal=true
+    echo "Option enabled to use local binaries"
+    shift;;
+  -*|--*=) # unsupported flags
+    echo "Error: Unsupported flag $1" >&2
+    exit 1;;
+  *) # preserve positional arguments
+    PARAMS="$PARAMS $1"
+    shift;;
+  esac
 done
 
 if [[ ! -d $targetDir ]]
@@ -51,13 +88,24 @@ configPath=$scriptDir/config
 
 # Reference the dovi_tool, mkvextract, and mkvmerge executables and the JSON file in their respective subdirectories
 languageCodesPath=$toolsPath/language_codes.applescript
-doviToolPath=$toolsPath/dovi_tool
-mkvextractPath=$toolsPath/mkvextract
-mkvmergePath=$toolsPath/mkvmerge
+# If the --use-local flag is set, use the executables on the user's system; otherwise, use the executables in the tools directory
+if [[ $useLocal == true ]]
+then
+    doviToolPath=dov_tool
+    mkvextractPath=mkvextract
+    mkvmergePath=mkvmerge
+else
+    doviToolPath=$toolsPath/dovi_tool
+    mkvextractPath=$toolsPath/mkvextract
+    mkvmergePath=$toolsPath/mkvmerge
+fi
 jsonFilePath=$configPath/DV7toDV8.json
-
-languageCodes=$(osascript "$languageCodesPath")
-
+# If we're running on a mac and the language code(s) are not provided, get them from the user
+if [[ $(uname) == "Darwin" ]] && [[ $languageCodeSet == false ]]
+then
+    echo "Getting language codes..."
+    languageCodes=$(osascript "$languageCodesPath")
+fi
 for mkvFile in "$targetDir"/*.mkv
 do
     mkvBase=$(basename "$mkvFile" .mkv)
@@ -98,7 +146,7 @@ do
 
     if [[ $? != 0 ]] || [[ ! -f "$DV8_BL_RPU_HEVC" ]]
     then
-        echo "File to convert BL+RPU. Quitting."
+        echo "Failed to convert BL+RPU. Quitting."
         exit 1
     fi
 
@@ -120,12 +168,13 @@ do
         echo "Remuxing audio and subtitle languages: $languageCodes"
         "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
     else
+        echo "Remuxing all audio and subtitle tracks..."
         "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
     fi
 
     if [[ $keepFiles == false ]]
     then
-        echo "Cleaning up..."
+        echo "Cleaning up working files..."
         rm "$DV8_RPU_BIN" 
         rm "$DV8_BL_RPU_HEVC"
     fi
