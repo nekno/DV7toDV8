@@ -30,7 +30,7 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
 - The app will process each `.mkv` file in the folder, performing the following:
   - Demux the DV7 BL+EL+RPU HEVC video stream from the MKV container
   - Demux the DV7 EL+RPU enhancement layer from the HEVC stream for your archival purposes (delete this file if you don't care to be able to reconstruct the DV7 BL+EL+RPU in the future)
-  - Convert the DV7 BL+EL+RPU to DV8 BL+RPU, removing tone mappings specific to profile 7 and any CM v4.0 mappings (leaving CM v2.9)
+  - Convert the DV7 BL+EL+RPU to DV8 BL+RPU, removing tone mappings specific to profile 7
   - Delete the DV7 BL+EL+RPU HEVC file to conserve disk space
   - Extract the DV8 RPU from the DV8 BL+RPU HEVC stream
   - Plot a graph of the L1 metadata and render it into a PNG
