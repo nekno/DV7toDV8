@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# Mac specific
 # Only needed when relying on a local install of mkvtoolnix
 # which mkvmerge >/dev/null
 # if [[ $? == 1 ]]
