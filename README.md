@@ -55,9 +55,9 @@ Keeps intermediate files generated during the conversion process.
 
 Specifies the target directory where .mkv files are located. Defaults to the current directory if not specified.
 
-### -l
+### `-l` or `--languages`
 
-Specifies comma-separated language codes for audio and subtitle tracks to include in the final .mkv file. If not specified, all tracks are included.
+Specifies comma-separated language codes for audio and subtitle tracks to include in the final `.mkv` file. You can provide [ISO 639-1 codes (`en,es,de`) or ISO 639-2 codes (`eng,spa,ger`)](https://www.loc.gov/standards/iso639-2/php/English_list.php). If not specified, all tracks are included.
 
 ### `-u` or `--use-local`
 
