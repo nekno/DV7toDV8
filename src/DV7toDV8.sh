@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mac specific
+# Mac-specific tests for local tools
 # Only needed when relying on a local install of mkvtoolnix
 # which mkvmerge >/dev/null
 # if [[ $? == 1 ]]
@@ -32,7 +32,7 @@ function print_help {
     echo "Options:"
     echo "-k|--keep-files       Keep working files"
     echo "-t|--target PATH      Specify the target directory (default: current directory)"
-    echo "-l|languages LANG     Specify the language codes (comma-separated) for audio and subtitle tracks. If not specified, default to all tracks."
+    echo "-l|--languages LANGS  Specify comma-separated ISO 639-1 (en,es,de) or ISO 639-2 language codes (eng,spa,ger) for audio and subtitle tracks to keep (default: keep all tracks)"
     echo "-u|--use-local        Use local system binaries if available"
     echo "-h|--help             Display this help message"
     echo ""
@@ -100,7 +100,7 @@ else
     mkvmergePath=$toolsPath/mkvmerge
 fi
 jsonFilePath=$configPath/DV7toDV8.json
-# If we're running on a mac and the language code(s) are not provided, get them from the user
+# If we're running on a Mac and the language code(s) are not provided, get them from the user
 if [[ $(uname) == "Darwin" ]] && [[ $languageCodeSet == false ]]
 then
     echo "Getting language codes..."
