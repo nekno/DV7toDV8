@@ -47,11 +47,11 @@ The `DV7toDV8.sh` script offers a more transparent but less streamlined approach
 
 ## Options
 
-### -k or --keep-files
+### `-k` or `--keep-files`
 
 Keeps intermediate files generated during the conversion process.
 
-### -t or --target
+### `-t` or `--target`
 
 Specifies the target directory where .mkv files are located. Defaults to the current directory if not specified.
 
@@ -59,11 +59,11 @@ Specifies the target directory where .mkv files are located. Defaults to the cur
 
 Specifies comma-separated language codes for audio and subtitle tracks to include in the final .mkv file. If not specified, all tracks are included.
 
-### -u or --use-local
+### `-u` or `--use-local`
 
 Uses local system binaries of `mkvtoolnix` and `dovi_tool` if available, instead of the versions bundled with the script.
 
-### -h or --help
+### `-h` or `--help`
 
 Displays the help message detailing all options.
 
@@ -73,7 +73,7 @@ Displays the help message detailing all options.
 ./DV7toDV8.sh -k -t /path/to/mkv/files -l eng,spa
 ```
 
-### MacOS
+### macOS
 - Download and extract the repo
 - Run `DV7toDV8.sh` in Terminal, passing one argument for the folder location of the MKV files you want to convert
 - On first run of each utility, you'll need to approve the app to run and then re-run the script
@@ -81,7 +81,7 @@ Displays the help message detailing all options.
   - If you choose to use your own copies of the utilities, you can pass the `-u` or `--use-local` flag to the script to use the local versions
   - If you install the tools using Homebrew, they will be added to your PATH and the script will automatically use them
   - If you install the tools manually, you will need to add the directory containing the tools to your PATH
-  - Finally, you can alternatively update DV7toDV8.sh to point to the location of the tools on your system
+  - Finally, you can alternatively update `DV7toDV8.sh` to point to the location of the tools on your system
 - To approve the tools to run, you can run each tool in the `tools` folder in Terminal, or just run the script repeatedly (passing a folder containing MKV files as an argument)
   - Run the script once
   - Open the **System Settings** app
