@@ -27,7 +27,7 @@ useLocal=false
 
 # Help function
 function print_help {
-    echo "Usage: $0 [options]"
+    echo "Usage: $0 [options] [target directory]"
     echo ""
     echo "Options:"
     echo "-k|--keep-files       Keep working files"
@@ -47,10 +47,6 @@ while (( "$#" )); do
     shift;;
   -h|--help)
     print_help;;
-  -t|--target)
-    targetDir=$2
-    echo "Target directory set to '$targetDir'"
-    shift 2;;
   -l|--languages)
     languageCodes=$2
     echo "Language codes set to '$languageCodes'"
@@ -63,8 +59,8 @@ while (( "$#" )); do
   -*|--*=) # unsupported flags
     echo "Error: Unsupported flag $1" >&2
     exit 1;;
-  *) # preserve positional arguments
-    PARAMS="$PARAMS $1"
+  *)
+    targetDir=$1
     shift;;
   esac
 done
