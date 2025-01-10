@@ -18,39 +18,48 @@
 keepFiles=false
 targetDir=$PWD # Default to current directory
 languageCodes=""
-languageCodeSet=false
+languageCodesSet=false
 doviToolPath=""
 mkvextractPath=""
 mkvmergePath=""
 useLocal=false
 
-
 # Help function
 function print_help {
-    echo "Usage: $0 [options] [target directory]"
-    echo ""
-    echo "Options:"
-    echo "-k|--keep-files       Keep working files"
-    echo "-t|--target PATH      Specify the target directory (default: current directory)"
-    echo "-l|--languages LANGS  Specify comma-separated ISO 639-1 (en,es,de) or ISO 639-2 language codes (eng,spa,ger) for audio and subtitle tracks to keep (default: keep all tracks)"
-    echo "-u|--use-local        Use local system binaries if available"
-    echo "-h|--help             Display this help message"
-    echo ""
-    exit 1
+  echo ""
+  echo "Usage: $0 [OPTIONS] [PATH]"
+  echo ""
+  echo "Options:"
+  echo ""
+  echo "  -h|--help             Display this help message"
+  echo "  -k|--keep-files       Keep working files"
+  echo "  -l|--languages LANGS  Specify comma-separated ISO 639-1 (en,es,de) or ISO 639-2"
+  echo "                        language codes (eng,spa,ger) for audio and subtitle tracks to keep (default: keep all tracks)"
+  echo "  -u|--use-local        Use local system binaries"
+  echo ""
+  echo "Arguments:"
+  echo ""
+  echo "  PATH                  Specify the target directory path (default: current directory)"
+  echo ""
+  echo "Example:"
+  echo ""
+  echo "  $0 -k -l eng,spa /path/to/folder/containing/mkvs"
+  echo ""
+  exit 1
 }
 
 while (( "$#" )); do
   case "$1" in
+  -h|--help)
+    print_help;;
   -k|--keep-files)
     echo "Option enabled to keep working files"
     keepFiles=true
     shift;;
-  -h|--help)
-    print_help;;
   -l|--languages)
     languageCodes=$2
     echo "Language codes set to '$languageCodes'"
-    languageCodeSet=true
+    languageCodesSet=true
     shift 2;;
   -u|--use-local)
     useLocal=true
@@ -61,7 +70,7 @@ while (( "$#" )); do
     exit 1;;
   *)
     targetDir=$1
-    shift;;
+    break;;
   esac
 done
 
@@ -82,8 +91,9 @@ pushd "$targetDir" > /dev/null
 toolsPath=$scriptDir/tools
 configPath=$scriptDir/config
 
-# Reference the dovi_tool, mkvextract, and mkvmerge executables and the JSON file in their respective subdirectories
 languageCodesPath=$toolsPath/language_codes.applescript
+jsonFilePath=$configPath/DV7toDV8.json
+
 # If the --use-local flag is set, use the executables on the user's system; otherwise, use the executables in the tools directory
 if [[ $useLocal == true ]]
 then
@@ -95,13 +105,14 @@ else
     mkvextractPath=$toolsPath/mkvextract
     mkvmergePath=$toolsPath/mkvmerge
 fi
-jsonFilePath=$configPath/DV7toDV8.json
-# If we're running on a Mac and the language code(s) are not provided, get them from the user
-if [[ $(uname) == "Darwin" ]] && [[ $languageCodeSet == false ]]
+
+# If we're running on macOS and the language code(s) are not provided, get them from the user
+if [[ $(uname) == "Darwin" ]] && [[ $languageCodesSet == false ]]
 then
     echo "Getting language codes..."
     languageCodes=$(osascript "$languageCodesPath")
 fi
+
 for mkvFile in "$targetDir"/*.mkv
 do
     mkvBase=$(basename "$mkvFile" .mkv)
