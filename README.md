@@ -42,41 +42,44 @@ Dolby Vision profile 7 to Dolby Vision profile 8.1 conversion utility for macOS
 The `DV7toDV8.sh` script offers a more transparent but less streamlined approach compared to the app. It provides additional options for customization:
 
 ```bash
-./DV7toDV8.sh [options]
+./DV7toDV8.sh [OPTIONS] [PATH]
 ```
 
 ## Options
 
+### `-h` or `--help`
+
+Display the help message detailing script usage.
+
 ### `-k` or `--keep-files`
 
-Keeps intermediate files generated during the conversion process.
-
-### `-t` or `--target`
-
-Specifies the target directory where .mkv files are located. Defaults to the current directory if not specified.
+Keep intermediate files generated during the conversion process.
 
 ### `-l` or `--languages`
 
-Specifies comma-separated language codes for audio and subtitle tracks to include in the final `.mkv` file. You can provide [ISO 639-1 codes (`en,es,de`) or ISO 639-2 codes (`eng,spa,ger`)](https://www.loc.gov/standards/iso639-2/php/English_list.php). If not specified, all tracks are included.
+Specify comma-separated language codes for audio and subtitle tracks to include in the final `.mkv` file. You can provide [ISO 639-1 codes (`en,es,de`) or ISO 639-2 codes (`eng,spa,ger`)](https://www.loc.gov/standards/iso639-2/php/English_list.php). If not specified, all tracks are included.
 
 ### `-u` or `--use-local`
 
-Uses local system binaries of `mkvtoolnix` and `dovi_tool` if available, instead of the versions bundled with the script.
+Use binaries of `mkvtoolnix` and `dovi_tool` installed on the local system (and included in the system `PATH`) instead of the versions bundled with the script.
 
-### `-h` or `--help`
+## Arguments
 
-Displays the help message detailing all options.
+### `PATH`
+
+Specify the path to the target directory containing the MKV files you want to process. If not specified, the current working directory (`$PWD`) is used.
 
 ## Example
   
 ```bash
-./DV7toDV8.sh -k -t /path/to/mkv/files -l eng,spa
+./DV7toDV8.sh -k -l eng,spa /path/to/folder/containing/mkvs
 ```
 
 ### macOS
+
 - Download and extract the repo
-- Run `DV7toDV8.sh` in Terminal, passing one argument for the folder location of the MKV files you want to convert
-- On first run of each utility, you'll need to approve the app to run and then re-run the script
+- Run `DV7toDV8.sh` in Terminal, passing at least one argument for the folder location of the MKV files you want to convert
+- On the first run of each utility, you'll need to approve the app to run and then re-run the script
 - The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (both can be installed via Homebrew)
   - If you choose to use your own copies of the utilities, you can pass the `-u` or `--use-local` flag to the script to use the local versions
   - If you install the tools using Homebrew, they will be added to your PATH and the script will automatically use them
@@ -95,10 +98,10 @@ Displays the help message detailing all options.
 - All utilities should now be approved and the script can be run normally
 
 ## Linux
-- The steps for running the script on Linux are similar to those for macOS with a few exceptions
-  - The script will not prompt you to enter language codes. These can be specified using the `-l` flag or ommitted to include all tracks
-  - The script will not prompt you to approve the tools to run. As long as the tools are executable, they should run without issue
 
+- The steps for running the script on Linux are similar to those for macOS with a few exceptions
+  - The script will not prompt you to enter language codes. These can be specified using the `-l` flag or ommitted to include all tracks.
+  - The script will not prompt you to approve the tools to run. As long as the tools are executable, they should run without issue.
 
 # Building
 
