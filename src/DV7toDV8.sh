@@ -1,117 +1,200 @@
 #!/bin/bash
-# Mac-specific tests for local tools
-# Only needed when relying on a local install of mkvtoolnix
-# which mkvmerge >/dev/null
-# if [[ $? == 1 ]]
-# then
-#     echo "Run 'brew install mkvtoolnix' to install mkvmerge"
-#     exit 1
-# fi
-# which mkvextract >/dev/null
-# if [[ $? == 1 ]]
-# then
-#     echo "Run 'brew install mkvtoolnix' to install mkvextract"
-#     exit 1
-# fi
 
-# Keep working files generated during processing
-keepFiles=false
-targetDir=$PWD # Default to current directory
+# Settings -- these need to use 0/1 for Boolean values for compatibility with the macOS defaults system
+dontAskAgain=0
+keepAllLanguages=1
+keepFiles=0
 languageCodes=""
-languageCodesSet=false
+removeCMv4=0
+useSystemTools=0
+
+# Paths
+targetDir=$PWD # Default to current directory
 doviToolPath=""
 mkvextractPath=""
 mkvmergePath=""
-useLocal=false
 
-# Help function
-function print_help {
-  echo ""
-  echo "Usage: $0 [OPTIONS] [PATH]"
-  echo ""
-  echo "Options:"
-  echo ""
-  echo "  -h|--help             Display this help message"
-  echo "  -k|--keep-files       Keep working files"
-  echo "  -l|--languages LANGS  Specify comma-separated ISO 639-1 (en,es,de) or ISO 639-2"
-  echo "                        language codes (eng,spa,ger) for audio and subtitle tracks to keep (default: keep all tracks)"
-  echo "  -u|--use-local        Use local system binaries"
-  echo ""
-  echo "Arguments:"
-  echo ""
-  echo "  PATH                  Specify the target directory path (default: current directory)"
-  echo ""
-  echo "Example:"
-  echo ""
-  echo "  $0 -k -l eng,spa /path/to/folder/containing/mkvs"
-  echo ""
-  exit 1
+# Functions
+
+# Read settings using `defaults` without overwriting current values that have not been set
+getSettings() {
+    local defaultValue
+
+    defaultValue=$(defaults read org.nekno.DV7toDV8 dontAskAgain 2> /dev/null)
+    if [[ $? == 0 ]]
+    then
+        dontAskAgain=$defaultValue
+    fi
+
+    defaultValue=$(defaults read org.nekno.DV7toDV8 keepAllLanguages 2> /dev/null)
+    if [[ $? == 0 ]]
+    then
+        keepAllLanguages=$defaultValue
+    fi
+
+    defaultValue=$(defaults read org.nekno.DV7toDV8 keepFiles 2> /dev/null)
+    if [[ $? == 0 ]]
+    then
+        keepFiles=$defaultValue
+    fi
+
+    defaultValue=$(defaults read org.nekno.DV7toDV8 languageCodes 2> /dev/null)
+    if [[ $? == 0 ]]
+    then
+        languageCodes=$defaultValue
+    fi
+
+    defaultValue=$(defaults read org.nekno.DV7toDV8 removeCMv4 2> /dev/null)
+    if [[ $? == 0 ]]
+    then
+        removeCMv4=$defaultValue
+    fi
+
+    defaultValue=$(defaults read org.nekno.DV7toDV8 useSystemTools 2> /dev/null)
+    if [[ $? == 0 ]]
+    then
+        useSystemTools=$defaultValue
+    fi
 }
 
-while (( "$#" )); do
-  case "$1" in
-  -h|--help)
-    print_help;;
-  -k|--keep-files)
-    echo "Option enabled to keep working files"
-    keepFiles=true
-    shift;;
-  -l|--languages)
-    languageCodes=$2
-    echo "Language codes set to '$languageCodes'"
-    languageCodesSet=true
-    shift 2;;
-  -u|--use-local)
-    useLocal=true
-    echo "Option enabled to use local binaries"
-    shift;;
-  -*|--*=) # unsupported flags
-    echo "Error: Unsupported flag $1" >&2
-    exit 1;;
-  *)
-    targetDir=$1
-    break;;
-  esac
-done
-
-if [[ ! -d $targetDir ]]
-then
-    echo "Directory not found: '$targetDir'"
+printHelp () {
+    echo ""
+    echo "Usage: $0 [OPTIONS] [PATH]"
+    echo ""
+    echo "Options:"
+    echo ""
+    echo "  -h|--help              Display this help message"
+    echo "  -k|--keep-files        Keep working files"
+    echo "  -l|--languages LANGS   Specify comma-separated ISO 639-1 (en,es,de) or ISO 639-2"
+    echo "                         language codes (eng,spa,ger) for audio and subtitle tracks to keep (default: keep all tracks)"
+    echo "  -r|--remove-cmv4       Remove DV CMv4.0 metadata and leave CMv2.9"
+    echo "  -s|--show-settings     Show the settings app to configure the script for use on macOS"
+    echo "  -u|--use-system-tools  Use tools installed on the local system"
+    echo ""
+    echo "Arguments:"
+    echo ""
+    echo "  PATH                   Specify the target directory path (default: current directory)"
+    echo ""
+    echo "Example:"
+    echo ""
+    echo "  $0 -k -l eng,spa -r /path/to/folder/containing/mkvs"
+    echo ""
     exit 1
-fi
-
-echo "Processing directory: '$targetDir'"
+}
 
 # Get the script's directory path; do this before pushing the targetDir
 scriptDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
-pushd "$targetDir" > /dev/null
-
-# Get the subdirectory paths
-toolsPath=$scriptDir/tools
+# Set the subdirectory paths
 configPath=$scriptDir/config
+toolsPath=$scriptDir/tools
+settingsAppPath="$toolsPath/DV7 to DV8 Settings.app"
 
-languageCodesPath=$toolsPath/language_codes.applescript
-jsonFilePath=$configPath/DV7toDV8.json
-
-# If the --use-local flag is set, use the executables on the user's system; otherwise, use the executables in the tools directory
-if [[ $useLocal == true ]]
+# If we're running on macOS, read the settings
+if [[ $(uname) == "Darwin" ]]
 then
+    getSettings
+fi
+
+# Get the command-line arguments to override the defaults
+while (( "$#" )); do
+    case "$1" in
+    -h|--help)
+        printHelp;;
+    -k|--keep-files)
+        echo "Option enabled to keep working files..."
+        keepFiles=1
+        shift;;
+    -l|--languages)
+        languageCodes=$2
+        echo "Language codes set: '$languageCodes'..."
+        echo "Option disabled to keep all audio & subtitle languages..."
+        keepAllLanguages=0
+        shift 2;;
+    -r|--remove-cmv4)
+        echo "Option enabled to remove CMv4.0..."
+        removeCMv4=1
+        shift;;
+    -s|--show-settings)
+        echo "Option enabled to show the settings app on macOS..."
+        dontAskAgain=0
+        shift;;
+    -u|--use-system-tools)
+        useSystemTools=1
+        echo "Option enabled to use system tools..."
+        shift;;
+    -*|--*=) # unsupported flags
+        echo "Error: Unsupported flag '$1'. Quitting." >&2
+        exit 1;;
+    *)
+        echo "Setting target directory: '$1'..."
+        targetDir=$1
+        shift;;
+    esac
+done
+
+# If we're running on macOS, get settings if allowed
+if [[ $(uname) == "Darwin" ]] && [[ $dontAskAgain == 0 ]]
+then
+    echo "Prompting for settings..."
+    open -W -a "$settingsAppPath" 2> /dev/null
+    getSettings
+fi
+
+# Set the JSON config file based on the CMv4.0 setting
+if [[ $removeCMv4 == 1 ]]
+then
+    echo "Using CMv2.9 config file..."
+    jsonFilePath=$configPath/DV7toDV8-CMv29.json
+else
+    echo "Using CMv4.0 config file..."
+    jsonFilePath=$configPath/DV7toDV8-CMv40.json
+fi
+
+# Use the binaries installed on the local system; otherwise, use the binaries in the tools directory
+if [[ $useSystemTools == 1 ]]
+then
+    which dovi_tool >/dev/null
+    if [[ $? == 1 ]]
+    then
+        echo "dovi_tool not found in the system path. Quitting."
+        exit 1
+    fi
+
+    which mkvextract >/dev/null
+    if [[ $? == 1 ]]
+    then
+        echo "mkvextract not found in the system path. Quitting."
+        exit 1
+    fi
+
+    which mkvmerge >/dev/null
+    if [[ $? == 1 ]]
+    then
+        echo "mkvmerge not found in the system path. Quitting."
+        exit 1
+    fi
+
+    echo "Using local system tools..."
     doviToolPath=dovi_tool
     mkvextractPath=mkvextract
     mkvmergePath=mkvmerge
 else
+    echo "Using bundled tools..."
     doviToolPath=$toolsPath/dovi_tool
     mkvextractPath=$toolsPath/mkvextract
     mkvmergePath=$toolsPath/mkvmerge
 fi
 
-# If we're running on macOS and the language code(s) are not provided, get them from the user
-if [[ $(uname) == "Darwin" ]] && [[ $languageCodesSet == false ]]
+if [[ ! -d $targetDir ]]
 then
-    echo "Getting language codes..."
-    languageCodes=$(osascript "$languageCodesPath")
+    echo "Directory not found: '$targetDir'. Quitting."
+    exit 1
 fi
+
+echo "Processing directory: '$targetDir'..."
+
+pushd "$targetDir" > /dev/null
 
 for mkvFile in "$targetDir"/*.mkv
 do
@@ -158,7 +241,7 @@ do
     fi
 
     echo "Deleting BL+EL+RPU HEVC..."
-    if [[ $keepFiles == false ]]
+    if [[ $keepFiles == 0 ]]
     then
         rm "$BL_EL_RPU_HEVC"
     fi
@@ -170,16 +253,16 @@ do
     "$doviToolPath" plot "$DV8_RPU_BIN" -o "$mkvBase.DV8.L1_plot.png"
 
     echo "Remuxing DV8 MKV..."
-    if [[ $languageCodes != "" ]]
+    if [[ $keepAllLanguages == 0 ]] && [[ $languageCodes != "" ]]
     then
-        echo "Remuxing audio and subtitle languages: $languageCodes"
+        echo "Remuxing audio and subtitle languages: '$languageCodes'..."
         "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
     else
         echo "Remuxing all audio and subtitle tracks..."
         "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
     fi
 
-    if [[ $keepFiles == false ]]
+    if [[ $keepFiles == 0 ]]
     then
         echo "Cleaning up working files..."
         rm "$DV8_RPU_BIN" 
