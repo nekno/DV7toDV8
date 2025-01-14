@@ -93,6 +93,12 @@ Specify comma-separated language codes for audio and subtitle tracks to include 
 
 **Disabled** (default): Leave the CMv4.0 metadata intact (if present) in the output video. This option is compatible with the Apple TV 4K (2023).
 
+### `-s` or `--show-settings`
+
+Show the **DV7 to DV8 Settings** app to configure the script for use on macOS (this option must be specified last).
+
+Overrides the **Donʼt ask again** option in the settings app to prompt for settings again.
+
 ### `-u` or `--use-system-tools`
 
 **Enabled**: Use the `dovi_tool` and `mkvtoolnix` binaries installed on the local system.
