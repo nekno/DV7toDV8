@@ -68,7 +68,8 @@ printHelp () {
     echo "  -l|--languages LANGS   Specify comma-separated ISO 639-1 (en,es,de) or ISO 639-2"
     echo "                         language codes (eng,spa,ger) for audio and subtitle tracks to keep (default: keep all tracks)"
     echo "  -r|--remove-cmv4       Remove DV CMv4.0 metadata and leave CMv2.9"
-    echo "  -s|--show-settings     Show the settings app to configure the script for use on macOS"
+    echo "  -s|--show-settings     Show the settings app to configure the script for use on macOS (this option must be specified last)"
+    echo "                         (default: enabled on macOS; unsupported on other platforms)"
     echo "  -u|--use-system-tools  Use tools installed on the local system"
     echo ""
     echo "Arguments:"
@@ -97,38 +98,42 @@ then
 fi
 
 # Get the command-line arguments to override the defaults
+# If any args are specified, assume all options were set as desired, so don't prompt for settings
 while (( "$#" )); do
     case "$1" in
     -h|--help)
         printHelp;;
     -k|--keep-files)
-        echo "Option enabled to keep working files..."
         keepFiles=1
+        dontAskAgain=1
+        echo "Option enabled to keep working files..."
         shift;;
     -l|--languages)
         languageCodes=$2
-        echo "Language codes set: '$languageCodes'..."
-        echo "Option disabled to keep all audio & subtitle languages..."
         keepAllLanguages=0
+        dontAskAgain=1
+        echo "Language codes set: '$languageCodes'..."
         shift 2;;
     -r|--remove-cmv4)
-        echo "Option enabled to remove CMv4.0..."
         removeCMv4=1
+        dontAskAgain=1
+        echo "Option enabled to remove CMv4.0..."
         shift;;
     -s|--show-settings)
-        echo "Option enabled to show the settings app on macOS..."
         dontAskAgain=0
+        echo "Option enabled to show the settings app on macOS..."
         shift;;
     -u|--use-system-tools)
         useSystemTools=1
+        dontAskAgain=1
         echo "Option enabled to use system tools..."
         shift;;
     -*|--*=) # unsupported flags
         echo "Error: Unsupported flag '$1'. Quitting." >&2
         exit 1;;
     *)
-        echo "Setting target directory: '$1'..."
         targetDir=$1
+        echo "Setting target directory: '$targetDir'..."
         shift;;
     esac
 done
