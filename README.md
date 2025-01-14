@@ -6,6 +6,8 @@ The app can also be used to remove DV CMv4.0 metadata from an existing DV 8.1 vi
 
 The script without the app is also compatible with common Unix/Linux distros.
 
+![DV7 to DV8 Settings screenshot](images/audio-and-subtitles-screenshot.png)
+
 # macOS Installation
 
 - Download the latest [release](https://github.com/nekno/DV7toDV8/releases)
