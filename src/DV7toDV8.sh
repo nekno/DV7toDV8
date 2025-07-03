@@ -7,6 +7,7 @@ keepFiles=0
 languageCodes=""
 removeCMv4=0
 useSystemTools=0
+scanMode=0
 
 # Paths
 targetDir=$PWD # Default to current directory
@@ -70,6 +71,7 @@ printHelp () {
     echo "  -r|--remove-cmv4       Remove DV CMv4.0 metadata and leave CMv2.9"
     echo "  -s|--show-settings     Show the settings app to configure the script for use on macOS (this option must be specified last)"
     echo "                         (default: enabled on macOS; unsupported on other platforms)"
+    echo "  -S|--scan              Scan directory for DV7 files and optionally convert them"
     echo "  -u|--use-system-tools  Use tools installed on the local system"
     echo ""
     echo "Arguments:"
@@ -81,6 +83,91 @@ printHelp () {
     echo "  $0 -k -l eng,spa -r /path/to/folder/containing/mkvs"
     echo ""
     exit 1
+}
+
+# Simple scan function with table output
+scanDirectory() {
+    echo "Scanning for DV files in: $targetDir"
+    echo ""
+    
+    which mediainfo >/dev/null 2>&1 || { echo "Error: mediainfo is required. Install with: brew install mediainfo"; exit 1; }
+    
+    local dv7Count=0
+    local -a dv7Files=()
+    local processedDV8s=""
+    
+    # Table header
+    printf "%-65s %-6s %-10s %-10s\n" "Filename" "Type" "Size" "Status"
+    printf "%s\n" "$(printf '%.0s-' {1..91})"
+    
+    # Find all MKV files
+    while IFS= read -r -d '' mkvFile; do
+        local mkvBase=$(basename "$mkvFile")
+        local fileSize=$(ls -lh "$mkvFile" | awk '{print $5}')
+        
+        # Skip .DV8.mkv files for now (we'll handle them as children)
+        [[ "$mkvFile" == *.DV8.mkv ]] && continue
+        
+        # Get DV profile
+        local dvProfile=$(mediainfo --Inform="Video;%HDR_Format_Profile%" "$mkvFile" 2>/dev/null)
+        [[ -z "$dvProfile" || "$dvProfile" != *"dv"* ]] && continue
+        
+        # Determine type
+        local dvType="DV?"
+        [[ "$dvProfile" == *"dvhe.07"* || "$dvProfile" == *"07"* ]] && dvType="DV7"
+        [[ "$dvProfile" == *"dvhe.08"* || "$dvProfile" == *"08"* ]] && dvType="DV8"
+        
+        # Check conversion status and print parent
+        if [[ "$dvType" == "DV7" ]]; then
+            if [[ -f "${mkvFile%.mkv}.DV8.mkv" ]]; then
+                # DV7 with converted DV8
+                printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "✓"
+                # Show the DV8 child
+                local dv8File="${mkvFile%.mkv}.DV8.mkv"
+                local dv8Base=$(basename "$dv8File")
+                local dv8Size=$(ls -lh "$dv8File" | awk '{print $5}')
+                printf "  └─ %-56s %-6s %-10s %-10s\n" "${dv8Base:0:60}" "DV8" "$dv8Size" "✓"
+                processedDV8s="$processedDV8s|$dv8File|"
+            else
+                # DV7 without conversion
+                ((dv7Count++))
+                dv7Files+=("$mkvFile")
+                printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "○"
+            fi
+        else
+            # Original DV8
+            printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "✓"
+        fi
+    done < <(find "$targetDir" -name "*.mkv" -type f -print0 2>/dev/null | sort -z 2>/dev/null || true)
+    
+    # Now handle any orphaned DV8 files (DV8s without corresponding DV7s)
+    while IFS= read -r -d '' mkvFile; do
+        [[ "$mkvFile" != *.DV8.mkv ]] && continue
+        [[ "$processedDV8s" == *"|$mkvFile|"* ]] && continue
+        
+        local mkvBase=$(basename "$mkvFile")
+        local fileSize=$(ls -lh "$mkvFile" | awk '{print $5}')
+        printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "DV8" "$fileSize" "Orphaned"
+    done < <(find "$targetDir" -name "*.mkv" -type f -print0 2>/dev/null | sort -z 2>/dev/null || true)
+    
+    printf "%s\n" "$(printf '%.0s-' {1..91})"
+    echo ""
+    if [[ $dv7Count -eq 0 ]]; then
+        echo "No DV7 files need conversion."
+        exit 0
+    fi
+    
+    echo "Found $dv7Count DV7 files that need conversion."
+    echo -n "Convert them now? [y/N] "
+    read -r response
+    
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+        echo "Cancelled."
+        exit 0
+    fi
+    
+    # User said yes - let the main loop handle it
+    echo ""
 }
 
 # Get the script's directory path; do this before pushing the targetDir
@@ -127,6 +214,11 @@ while (( "$#" )); do
         useSystemTools=1
         dontAskAgain=1
         echo "Option enabled to use system tools..."
+        shift;;
+    -S|--scan)
+        scanMode=1
+        dontAskAgain=1
+        echo "Option enabled to scan for DV7 files..."
         shift;;
     -*|--*=) # unsupported flags
         echo "Error: Unsupported flag '$1'. Quitting." >&2
@@ -197,12 +289,22 @@ then
     exit 1
 fi
 
+# If scan mode is enabled, scan first
+if [[ $scanMode == 1 ]]
+then
+    scanDirectory
+    # If we get here, user said yes to convert
+fi
+
 echo "Processing directory: '$targetDir'..."
 
 pushd "$targetDir" > /dev/null
 
-for mkvFile in "$targetDir"/*.mkv
+for mkvFile in *.mkv
 do
+    # Skip .DV8.mkv files
+    [[ "$mkvFile" == *.DV8.mkv ]] && continue
+    
     mkvBase=$(basename "$mkvFile" .mkv)
     BL_EL_RPU_HEVC=$mkvBase.BL_EL_RPU.hevc
     DV7_EL_RPU_HEVC=$mkvBase.DV7.EL_RPU.hevc
