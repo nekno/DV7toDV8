@@ -93,7 +93,7 @@ scanDirectory() {
     which mediainfo >/dev/null 2>&1 || { echo "Error: mediainfo is required. Install with: brew install mediainfo"; exit 1; }
     
     local dv7Count=0
-    local -a dv7Files=()
+    dv7Files=()  # Make this global so main loop can access it
     local processedDV8s=""
     
     # Table header
@@ -298,21 +298,50 @@ fi
 
 echo "Processing directory: '$targetDir'..."
 
-pushd "$targetDir" > /dev/null
+# Determine which files to process
+if [[ $scanMode == 1 && ${#dv7Files[@]} -gt 0 ]]; then
+    # Use scan results
+    filesToProcess=("${dv7Files[@]}")
+else
+    # Find all mkv files in target directory (non-recursive)
+    pushd "$targetDir" > /dev/null
+    filesToProcess=(*.mkv)
+    popd > /dev/null
+    
+    # Check if any files were found
+    if [[ ${#filesToProcess[@]} -eq 1 && "${filesToProcess[0]}" == "*.mkv" ]]; then
+        echo "No .mkv files found in the target directory."
+        exit 1
+    fi
+fi
 
-for mkvFile in *.mkv
+for mkvFile in "${filesToProcess[@]}"
 do
     # Skip .DV8.mkv files
     [[ "$mkvFile" == *.DV8.mkv ]] && continue
     
+    # Get the directory and base name of the file
+    mkvDir=$(dirname "$mkvFile")
     mkvBase=$(basename "$mkvFile" .mkv)
-    BL_EL_RPU_HEVC=$mkvBase.BL_EL_RPU.hevc
-    DV7_EL_RPU_HEVC=$mkvBase.DV7.EL_RPU.hevc
-    DV8_BL_RPU_HEVC=$mkvBase.DV8.BL_RPU.hevc
-    DV8_RPU_BIN=$mkvBase.DV8.RPU.bin
+    
+    # Change to the file's directory for processing
+    if [[ "$mkvDir" != "." ]]; then
+        pushd "$mkvDir" > /dev/null
+    else
+        pushd "$targetDir" > /dev/null
+    fi
+    
+    # Set up file names (in the same directory as the source file)
+    BL_EL_RPU_HEVC="$mkvBase.BL_EL_RPU.hevc"
+    DV7_EL_RPU_HEVC="$mkvBase.DV7.EL_RPU.hevc"
+    DV8_BL_RPU_HEVC="$mkvBase.DV8.BL_RPU.hevc"
+    DV8_RPU_BIN="$mkvBase.DV8.RPU.bin"
+    
+    # Use just the filename for mkvextract since we're in the file's directory
+    mkvFileName=$(basename "$mkvFile")
 
     echo "Demuxing BL+EL+RPU HEVC from MKV..."
-    "$mkvextractPath" "$mkvFile" tracks 0:"$BL_EL_RPU_HEVC"
+    "$mkvextractPath" "$mkvFileName" tracks 0:"$BL_EL_RPU_HEVC"
 
     if [[ $? != 0 ]] || [[ ! -f "$BL_EL_RPU_HEVC" ]]
     then
@@ -363,10 +392,10 @@ do
     if [[ $keepAllLanguages == 0 ]] && [[ $languageCodes != "" ]]
     then
         echo "Remuxing audio and subtitle languages: '$languageCodes'..."
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
+        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFileName" "$DV8_BL_RPU_HEVC" --track-order 1:0
     else
         echo "Remuxing all audio and subtitle tracks..."
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFile" "$DV8_BL_RPU_HEVC" --track-order 1:0
+        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFileName" "$DV8_BL_RPU_HEVC" --track-order 1:0
     fi
 
     if [[ $keepFiles == 0 ]]
@@ -375,7 +404,9 @@ do
         rm "$DV8_RPU_BIN" 
         rm "$DV8_BL_RPU_HEVC"
     fi
+    
+    # Return to previous directory
+    popd > /dev/null
 done
 
-popd > /dev/null
 echo "Done."
