@@ -99,6 +99,10 @@ Show the **DV7 to DV8 Settings** app to configure the script for use on macOS (t
 
 Overrides the **Donʼt ask again** option in the settings app to prompt for settings again.
 
+### `-S` or `--scan`
+
+Scan the directory for DV7 files and display a table showing their conversion status and ask for batch conversion.
+
 ### `-u` or `--use-system-tools`
 
 **Enabled**: Use the `dovi_tool` and `mkvtoolnix` binaries installed on the local system.
@@ -111,12 +115,18 @@ Overrides the **Donʼt ask again** option in the settings app to prompt for sett
 
 Specify the path to the target directory containing the MKV files you want to process. If not specified, the current working directory (`$PWD`) is used.
 
-## Example
+## Examples
 
 Keep all working files, keep only English and Spanish audio tracks and subtitles, and remove the DV CMv4.0 metadata when processing all MKV files in the folder.
   
 ```bash
 ./DV7toDV8.sh -k -l eng,spa -r /path/to/folder/containing/mkvs
+```
+
+Scan a directory to see which files need conversion before processing:
+
+```bash
+./DV7toDV8.sh -S /path/to/folder/containing/mkvs
 ```
 
 ## macOS
@@ -148,6 +158,7 @@ Keep all working files, keep only English and Spanish audio tracks and subtitles
 - The steps for running the script on Linux are similar to those for macOS with a few exceptions
   - The script will not prompt you to enter language codes. These can be specified using the `-l` flag or ommitted to include all tracks.
   - The script will not prompt you to approve the tools to run. As long as the tools are executable, they should run without issue.
+  - The `--scan` option requires `mediainfo` to be installed. You can install it using your distribution's package manager (e.g., `apt install mediainfo` on Debian/Ubuntu).
 
 # Building
 
