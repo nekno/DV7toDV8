@@ -97,16 +97,15 @@ scanDirectory() {
     local processedDV8s=""
     
     # Table header
-    printf "%-65s %-6s %-10s %-10s\n" "Filename" "Type" "Size" "Status"
-    printf "%s\n" "$(printf '%.0s-' {1..91})"
+    printf "%-65s %-10s %-10s %-10s\n" "Filename" "Type" "Size" "Status"
+    printf "%s\n" "$(printf '%.0s-' {1..95})"
     
     # Find all MKV files
     while IFS= read -r -d '' mkvFile; do
         local mkvBase=$(basename "$mkvFile")
         local fileSize=$(ls -lh "$mkvFile" | awk '{print $5}')
         
-        # Skip .DV8.mkv files for now (we'll handle them as children)
-        [[ "$mkvFile" == *.DV8.mkv ]] && continue
+        # Skip nothing - we'll handle all files appropriately
         
         # Get DV profile
         local dvProfile=$(mediainfo --Inform="Video;%HDR_Format_Profile%" "$mkvFile" 2>/dev/null)
@@ -117,40 +116,49 @@ scanDirectory() {
         [[ "$dvProfile" == *"dvhe.07"* || "$dvProfile" == *"07"* ]] && dvType="DV7"
         [[ "$dvProfile" == *"dvhe.08"* || "$dvProfile" == *"08"* ]] && dvType="DV8"
         
+        # For .DV8.mkv files, check if they've already been processed as children
+        if [[ "$mkvFile" == *.DV8.mkv ]] && [[ "$processedDV8s" == *"|$mkvFile|"* ]]; then
+            continue
+        fi
+        
         # Check conversion status and print parent
         if [[ "$dvType" == "DV7" ]]; then
             if [[ -f "${mkvFile%.mkv}.DV8.mkv" ]]; then
                 # DV7 with converted DV8
-                printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "✓"
+                printf "%-65s %-10s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "✓"
                 # Show the DV8 child
                 local dv8File="${mkvFile%.mkv}.DV8.mkv"
                 local dv8Base=$(basename "$dv8File")
                 local dv8Size=$(ls -lh "$dv8File" | awk '{print $5}')
-                printf "  └─ %-56s %-6s %-10s %-10s\n" "${dv8Base:0:60}" "DV8" "$dv8Size" "✓"
+                local elRpuFile="${mkvFile%.mkv}.DV7.EL_RPU.hevc"
+                local dvStatus="DV8"
+                [[ -f "$elRpuFile" ]] && dvStatus="DV8+EL_RPU"
+                printf "  └─ %-56s %-10s %-10s %-10s\n" "${dv8Base:0:56}" "$dvStatus" "$dv8Size" "✓"
                 processedDV8s="$processedDV8s|$dv8File|"
             else
                 # DV7 without conversion
                 ((dv7Count++))
                 dv7Files+=("$mkvFile")
-                printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "○"
+                printf "%-65s %-10s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "○"
             fi
         else
-            # Original DV8
-            printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "$dvType" "$fileSize" "✓"
+            # DV8 file (either original or standalone converted)
+            local elRpuFile
+            if [[ "$mkvFile" == *.DV8.mkv ]]; then
+                # For converted DV8 files, check for EL_RPU based on original name
+                local originalBase="${mkvFile%.DV8.mkv}"
+                elRpuFile="${originalBase}.DV7.EL_RPU.hevc"
+            else
+                # For original DV8 files
+                elRpuFile="${mkvFile%.mkv}.DV7.EL_RPU.hevc"
+            fi
+            local dvStatus="$dvType"
+            [[ -f "$elRpuFile" ]] && dvStatus="${dvType}+EL_RPU"
+            printf "%-65s %-10s %-10s %-10s\n" "${mkvBase:0:63}" "$dvStatus" "$fileSize" "✓"
         fi
     done < <(find "$targetDir" -name "*.mkv" -type f -print0 2>/dev/null | sort -z 2>/dev/null || true)
     
-    # Now handle any orphaned DV8 files (DV8s without corresponding DV7s)
-    while IFS= read -r -d '' mkvFile; do
-        [[ "$mkvFile" != *.DV8.mkv ]] && continue
-        [[ "$processedDV8s" == *"|$mkvFile|"* ]] && continue
-        
-        local mkvBase=$(basename "$mkvFile")
-        local fileSize=$(ls -lh "$mkvFile" | awk '{print $5}')
-        printf "%-65s %-6s %-10s %-10s\n" "${mkvBase:0:63}" "DV8" "$fileSize" "Orphaned"
-    done < <(find "$targetDir" -name "*.mkv" -type f -print0 2>/dev/null | sort -z 2>/dev/null || true)
-    
-    printf "%s\n" "$(printf '%.0s-' {1..91})"
+    printf "%s\n" "$(printf '%.0s-' {1..95})"
     echo ""
     if [[ $dv7Count -eq 0 ]]; then
         echo "No DV7 files need conversion."
