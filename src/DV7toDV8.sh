@@ -306,6 +306,9 @@ fi
 
 echo "Processing directory: '$targetDir'..."
 
+# Array to track successfully processed DV7 files
+processedDV7Files=()
+
 # Determine which files to process
 if [[ $scanMode == 1 && ${#dv7Files[@]} -gt 0 ]]; then
     # Use scan results
@@ -413,8 +416,44 @@ do
         rm "$DV8_BL_RPU_HEVC"
     fi
     
+    # Check if remuxing was successful
+    if [[ -f "$mkvBase.DV8.mkv" ]]; then
+        # Add to processed files list with full path
+        if [[ "$mkvDir" != "." ]]; then
+            processedDV7Files+=("$mkvFile")
+        else
+            processedDV7Files+=("$targetDir/$mkvFileName")
+        fi
+    fi
+    
     # Return to previous directory
     popd > /dev/null
 done
 
 echo "Done."
+
+# Offer to delete original DV7 files if any were successfully processed
+if [[ ${#processedDV7Files[@]} -gt 0 ]]; then
+    echo ""
+    echo "Successfully converted ${#processedDV7Files[@]} DV7 file(s):"
+    echo ""
+    for file in "${processedDV7Files[@]}"; do
+        echo "  $file"
+    done
+    echo ""
+    echo -n "Delete original DV7 files? [y/N] "
+    read -r response
+    
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        echo "Deleting original DV7 files..."
+        for file in "${processedDV7Files[@]}"; do
+            if [[ -f "$file" ]]; then
+                rm "$file"
+                echo "  Deleted: $file"
+            fi
+        done
+        echo "Original DV7 files deleted."
+    else
+        echo "Original DV7 files kept."
+    fi
+fi
