@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Cleanup function for temp directories
+cleanup_temp_dirs() {
+    echo "Cleaning up any remaining temp directories..."
+    find "${targetDir:-$PWD}" -maxdepth 2 -type d -name ".dv7todv8_temp_*" -exec rm -rf {} + 2>/dev/null
+}
+
+# Set trap to cleanup on exit
+trap cleanup_temp_dirs EXIT
+
 # Settings -- these need to use 0/1 for Boolean values for compatibility with the macOS defaults system
 dontAskAgain=0
 keepAllLanguages=1
@@ -342,11 +351,15 @@ do
         pushd "$targetDir" > /dev/null
     fi
     
-    # Set up file names (in the same directory as the source file)
-    BL_EL_RPU_HEVC="$mkvBase.BL_EL_RPU.hevc"
-    DV7_EL_RPU_HEVC="$mkvBase.DV7.EL_RPU.hevc"
-    DV8_BL_RPU_HEVC="$mkvBase.DV8.BL_RPU.hevc"
-    DV8_RPU_BIN="$mkvBase.DV8.RPU.bin"
+    # Create temp subfolder for this conversion
+    tempDir=".dv7todv8_temp_${mkvBase}"
+    mkdir -p "$tempDir"
+    
+    # Set up file names (in temp directory)
+    BL_EL_RPU_HEVC="$tempDir/$mkvBase.BL_EL_RPU.hevc"
+    DV7_EL_RPU_HEVC="$tempDir/$mkvBase.DV7.EL_RPU.hevc"
+    DV8_BL_RPU_HEVC="$tempDir/$mkvBase.DV8.BL_RPU.hevc"
+    DV8_RPU_BIN="$tempDir/$mkvBase.DV8.RPU.bin"
     
     # Use just the filename for mkvextract since we're in the file's directory
     mkvFileName=$(basename "$mkvFile")
@@ -356,8 +369,10 @@ do
 
     if [[ $? != 0 ]] || [[ ! -f "$BL_EL_RPU_HEVC" ]]
     then
-        echo "Failed to extract HEVC track from MKV. Quitting."
-        exit 1
+        echo "ERROR: Failed to extract HEVC track from $mkvFileName"
+        echo "Temp files remain in: $tempDir"
+        popd > /dev/null
+        continue
     fi
 
     echo "Demuxing DV7 EL+RPU HEVC for you to archive for future use..."
@@ -365,8 +380,10 @@ do
 
     if [[ $? != 0 ]] || [[ ! -f "$DV7_EL_RPU_HEVC" ]]
     then
-        echo "Failed to demux EL+RPU HEVC file. Quitting."
-        exit 1
+        echo "ERROR: Failed to demux EL+RPU HEVC file for $mkvFileName"
+        echo "Temp files remain in: $tempDir"
+        popd > /dev/null
+        continue
     fi
 
     # If the EL is less than ~10MB, then the input was likely DV8 rather than DV7
@@ -374,8 +391,8 @@ do
     if [[ $(wc -c < "$DV7_EL_RPU_HEVC") -lt 10000000 ]]
     then
         echo "Extracting original RPU for you to archive for future use..."
-        "$doviToolPath" extract-rpu "$BL_EL_RPU_HEVC" -o "$mkvBase.RPU.bin"
-        "$doviToolPath" plot "$mkvBase.RPU.bin" -o "$mkvBase.L1_plot.png"
+        "$doviToolPath" extract-rpu "$BL_EL_RPU_HEVC" -o "$tempDir/$mkvBase.RPU.bin"
+        "$doviToolPath" plot "$tempDir/$mkvBase.RPU.bin" -o "$tempDir/$mkvBase.L1_plot.png"
     fi
 
     echo "Converting BL+EL+RPU to DV8 BL+RPU..."
@@ -383,8 +400,10 @@ do
 
     if [[ $? != 0 ]] || [[ ! -f "$DV8_BL_RPU_HEVC" ]]
     then
-        echo "Failed to convert BL+RPU. Quitting."
-        exit 1
+        echo "ERROR: Failed to convert BL+RPU for $mkvFileName"
+        echo "Temp files remain in: $tempDir"
+        popd > /dev/null
+        continue
     fi
 
     echo "Deleting BL+EL+RPU HEVC..."
@@ -397,16 +416,16 @@ do
     "$doviToolPath" extract-rpu "$DV8_BL_RPU_HEVC" -o "$DV8_RPU_BIN"
 
     echo "Plotting L1..."
-    "$doviToolPath" plot "$DV8_RPU_BIN" -o "$mkvBase.DV8.L1_plot.png"
+    "$doviToolPath" plot "$DV8_RPU_BIN" -o "$tempDir/$mkvBase.DV8.L1_plot.png"
 
     echo "Remuxing DV8 MKV..."
     if [[ $keepAllLanguages == 0 ]] && [[ $languageCodes != "" ]]
     then
         echo "Remuxing audio and subtitle languages: '$languageCodes'..."
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFileName" "$DV8_BL_RPU_HEVC" --track-order 1:0
+        "$mkvmergePath" -o "$tempDir/$mkvBase.DV8.mkv" -D -a $languageCodes -s $languageCodes "$mkvFileName" "$DV8_BL_RPU_HEVC" --track-order 1:0
     else
         echo "Remuxing all audio and subtitle tracks..."
-        "$mkvmergePath" -o "$mkvBase.DV8.mkv" -D "$mkvFileName" "$DV8_BL_RPU_HEVC" --track-order 1:0
+        "$mkvmergePath" -o "$tempDir/$mkvBase.DV8.mkv" -D "$mkvFileName" "$DV8_BL_RPU_HEVC" --track-order 1:0
     fi
 
     if [[ $keepFiles == 0 ]]
@@ -417,13 +436,41 @@ do
     fi
     
     # Check if remuxing was successful
-    if [[ -f "$mkvBase.DV8.mkv" ]]; then
+    if [[ -f "$tempDir/$mkvBase.DV8.mkv" ]]; then
+        echo "Moving converted files to final location..."
+        # Move the DV8 mkv to final location
+        mv "$tempDir/$mkvBase.DV8.mkv" "$mkvBase.DV8.mkv"
+        
+        # Move the L1 plot to final location
+        if [[ -f "$tempDir/$mkvBase.DV8.L1_plot.png" ]]; then
+            mv "$tempDir/$mkvBase.DV8.L1_plot.png" "$mkvBase.DV8.L1_plot.png"
+        fi
+        
+        # Move the DV7 EL_RPU file to final location (created earlier in the process)
+        if [[ -f "$DV7_EL_RPU_HEVC" ]]; then
+            mv "$DV7_EL_RPU_HEVC" "$mkvBase.DV7.EL_RPU.hevc"
+        fi
+        
+        # Move additional files for DV8 inputs (RPU.bin and L1_plot.png)
+        if [[ -f "$tempDir/$mkvBase.RPU.bin" ]]; then
+            mv "$tempDir/$mkvBase.RPU.bin" "$mkvBase.RPU.bin"
+        fi
+        if [[ -f "$tempDir/$mkvBase.L1_plot.png" ]]; then
+            mv "$tempDir/$mkvBase.L1_plot.png" "$mkvBase.L1_plot.png"
+        fi
+        
+        # Clean up temp directory
+        rm -rf "$tempDir"
+        
         # Add to processed files list with full path
         if [[ "$mkvDir" != "." ]]; then
             processedDV7Files+=("$mkvFile")
         else
             processedDV7Files+=("$targetDir/$mkvFileName")
         fi
+    else
+        echo "ERROR: Conversion failed for $mkvFileName - temp files remain in $tempDir"
+        # Don't clean up temp directory so user can investigate
     fi
     
     # Return to previous directory
