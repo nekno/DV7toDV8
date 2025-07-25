@@ -130,6 +130,15 @@ scanDirectory() {
             continue
         fi
         
+        # Skip .DV8.mkv files if they have a parent (they'll be shown as children)
+        if [[ "$mkvFile" == *.DV8.mkv ]]; then
+            local parentFile="${mkvFile%.DV8.mkv}.mkv"
+            if [[ -f "$parentFile" ]]; then
+                # Parent exists, skip this file (it will be shown as a child)
+                continue
+            fi
+        fi
+        
         # Check conversion status and print parent
         if [[ "$dvType" == "DV7" ]]; then
             if [[ -f "${mkvFile%.mkv}.DV8.mkv" ]]; then
