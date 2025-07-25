@@ -101,6 +101,7 @@ scanDirectory() {
     
     which mediainfo >/dev/null 2>&1 || { echo "Error: mediainfo is required. Install with: brew install mediainfo"; exit 1; }
     
+    local startTime=$(date +%s)
     local dv7Count=0
     dv7Files=()  # Make this global so main loop can access it
     local processedDV8s=""
@@ -117,7 +118,7 @@ scanDirectory() {
         # Skip nothing - we'll handle all files appropriately
         
         # Get DV profile
-        local dvProfile=$(mediainfo --Inform="Video;%HDR_Format_Profile%" "$mkvFile" 2>/dev/null)
+        local dvProfile=$(mediainfo --ParseSpeed=0.0 --Inform="Video;%HDR_Format_Profile%" "$mkvFile" 2>/dev/null)
         [[ -z "$dvProfile" || "$dvProfile" != *"dv"* ]] && continue
         
         # Determine type
@@ -176,7 +177,11 @@ scanDirectory() {
         fi
     done < <(find "$targetDir" -name "*.mkv" -type f -print0 2>/dev/null | sort -z 2>/dev/null || true)
     
+    local endTime=$(date +%s)
+    local scanTime=$((endTime - startTime))
+    
     printf "%s\n" "$(printf '%.0s-' {1..95})"
+    printf "Scan completed in %d seconds\n" "$scanTime"
     echo ""
     if [[ $dv7Count -eq 0 ]]; then
         echo "No DV7 files need conversion."
