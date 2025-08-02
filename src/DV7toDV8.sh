@@ -123,8 +123,20 @@ scanDirectory() {
         
         # Determine type
         local dvType="DV?"
-        [[ "$dvProfile" == *"dvhe.07"* || "$dvProfile" == *"07"* ]] && dvType="DV7"
-        [[ "$dvProfile" == *"dvhe.08"* || "$dvProfile" == *"08"* ]] && dvType="DV8"
+        
+        # Check for specific DV profiles
+        if [[ "$dvProfile" == *"dvav.04"* || "$dvProfile" == *"04"* ]]; then
+            dvType="DV4"
+        elif [[ "$dvProfile" == *"dvhe.05"* || "$dvProfile" == *"05"* ]]; then
+            dvType="DV5"
+        elif [[ "$dvProfile" == *"dvhe.07"* || "$dvProfile" == *"07"* ]]; then
+            dvType="DV7"
+        elif [[ "$dvProfile" == *"dvhe.08"* || "$dvProfile" == *"08"* ]]; then
+            dvType="DV8"
+        elif [[ "$dvProfile" =~ ([0-9]+) ]]; then
+            # Extract profile number for other DV profiles
+            dvType="DV${BASH_REMATCH[1]}"
+        fi
         
         # For .DV8.mkv files, check if they've already been processed as children
         if [[ "$mkvFile" == *.DV8.mkv ]] && [[ "$processedDV8s" == *"|$mkvFile|"* ]]; then
