@@ -150,7 +150,7 @@ Keep all working files, keep only English and Spanish audio tracks and subtitles
 This project leverages [Platypus](https://sveinbjorn.org/platypus) to create a macOS app bundle from a Bash script.
 
 - Clone the **DV7toDV8** repo in the `~/Documents/Xcode/DV7toDV8` folder
-- Install Platypus 5.4.1 or greater via [download](https://sveinbjorn.org/files/software/platypus.zip) or Homebrew
+- Install Platypus 5.5.0 or greater via [download](https://sveinbjorn.org/files/software/platypus.zip) or Homebrew
   ```bash
   $ brew install --cask platypus 
   ```
@@ -166,8 +166,8 @@ This project leverages [Platypus](https://sveinbjorn.org/platypus) to create a m
   - If the location where you've stored the files on disk doesn't match `~/Documents/Xcode/DV7toDV8/src/`, set the following locations:
     - **Script Path**: `DV7toDV8.sh`
     - **Bundled Files**:
-      - `tools` folder
       - `config` folder
+      - `tools` folder
 
 ## Building The Settings App
 
