@@ -95,9 +95,9 @@ Specify comma-separated language codes for audio and subtitle tracks to include 
 
 ### `-s` or `--show-settings`
 
-Show the **DV7 to DV8 Settings** app to configure the script for use on macOS (this option must be specified last).
+**Enabled** (default on macOS): Show the **DV7 to DV8 Settings** app to configure the script for use on macOS. This option must be specified last. When this option is used, it overrides the **Donʼt ask again** option in the settings app to prompt for settings again.
 
-Overrides the **Donʼt ask again** option in the settings app to prompt for settings again.
+**Disabled** (default on other platforms): Don't show the settings app. Use the previous options configured by the settings app (on macOS) and the command-line switches as overrides.
 
 ### `-u` or `--use-system-tools`
 
