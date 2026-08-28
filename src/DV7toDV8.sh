@@ -91,9 +91,19 @@ configPath=$scriptDir/config
 toolsPath=$scriptDir/tools
 settingsAppPath="$toolsPath/DV7 to DV8 Settings.app"
 
-# If we're running on macOS, read the settings
+# If we're running on macOS, set up Homebrew (if needed) and read the settings to get the last values
 if [[ $(uname) == "Darwin" ]]
 then
+    if [[ -x /opt/homebrew/bin/brew ]]
+    then
+        # Apple silicon Macs
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]
+    then
+        # Intel Macs
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+    
     getSettings
 fi
 
@@ -138,7 +148,7 @@ while (( "$#" )); do
     esac
 done
 
-# If we're running on macOS, get settings if allowed
+# If we're running on macOS, launch the settings app if allowed, then re-fetch the settings
 if [[ $(uname) == "Darwin" ]] && [[ $dontAskAgain == 0 ]]
 then
     echo "Prompting for settings..."
