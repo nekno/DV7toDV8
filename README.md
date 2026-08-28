@@ -121,9 +121,9 @@ Keep all working files, keep only English and Spanish audio tracks and subtitles
 - Run `DV7toDV8.sh` in Terminal, passing at least one argument for the folder location of the MKV files you want to convert
 - On the first run of each utility, you'll need to approve the app to run and then re-run the script
 - The bundled tools are unmodified versions of those publicly available, so if you're uncomfortable running the utilities downloaded in the `tools` folder, you can download and use your own copies of `dovi_tool` and `mkvtoolnix` (both can be installed via Homebrew)
-  - If you choose to use your own copies of the utilities, you can pass the `-u` or `--use-system-tools` flag to the script to use the local versions
-  - If you install the tools using Homebrew, they will be added to your PATH and the script will automatically use them
-  - If you install the tools manually, you will need to add the directory containing the tools to your PATH
+  - If you choose to use your own copies of the utilities, you can pass the `-u` or `--use-system-tools` flag to the script to use the local versions installed on your system
+  - The script will detect the presence of Homebrew and set up the shell environment to add the brew folder to your `PATH`, so if you install the tools using Homebrew, they'll be found automatically
+  - If you install the tools manually to another location, you'll need to make sure you add the directory containing the tools to your `PATH`
   - Finally, you can alternatively update `DV7toDV8.sh` to point to the location of the tools on your system
 - To approve the tools to run, you can run each tool in the `tools` folder in Terminal, or just run the script repeatedly (passing a folder containing MKV files as an argument)
   - Run the script once
