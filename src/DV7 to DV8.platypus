@@ -12,11 +12,11 @@
 	<string>nekno</string>
 	<key>BundledFiles</key>
 	<array>
-		<string>tools</string>
 		<string>config</string>
+		<string>tools</string>
 	</array>
 	<key>Creator</key>
-	<string>Platypus-5.4.1</string>
+	<string>Platypus-5.5.0</string>
 	<key>DeclareService</key>
 	<false/>
 	<key>Destination</key>
